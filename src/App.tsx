@@ -140,7 +140,7 @@ export default function App() {
     const handleTranscribe = async () => {
       if (!url) return;
       if (!effectiveApiKey) {
-        setTranscription('Error: Gemini API Key is missing. Please provide it in the input field above.');
+        setTranscription('Error: Gemini API Key is missing. Please provide it in the **Settings** menu. \n\n[Get a free Gemini API key here](https://aistudio.google.com/app/apikey)');
         return;
       }
       setIsTranscribing(true);
@@ -381,9 +381,19 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                   </div>
                   {!process.env.GEMINI_API_KEY && (
                     <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
-                      <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400 mb-2">
-                        <AlertCircle className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase tracking-wider">API Key Required</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
+                          <AlertCircle className="w-4 h-4" />
+                          <span className="text-xs font-bold uppercase tracking-wider">API Key Required</span>
+                        </div>
+                        <a 
+                          href="https://aistudio.google.com/app/apikey" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-bold text-amber-700 dark:text-amber-500 underline hover:text-amber-900 dark:hover:text-amber-300 transition-colors uppercase tracking-wider"
+                        >
+                          Get Key
+                        </a>
                       </div>
                       <input
                         type="password"
@@ -396,6 +406,9 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                         placeholder="Paste your Gemini API Key here..."
                         className="w-full p-2.5 text-sm rounded-lg border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
+                      <p className="mt-2 text-[10px] text-amber-600/80 dark:text-amber-500/60 leading-tight">
+                        Your key is stored locally in your browser and never sent to our servers.
+                      </p>
                     </div>
                   )}
                 </div>
