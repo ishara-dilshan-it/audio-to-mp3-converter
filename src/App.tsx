@@ -62,10 +62,9 @@ export default function App() {
   // Theme state
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark' ||
-        (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
-        ? 'dark'
-        : 'light';
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     return 'light';
   });
@@ -75,8 +74,10 @@ export default function App() {
     const root = window.document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
+      root.style.setProperty('color-scheme', 'dark');
     } else {
       root.classList.remove('dark');
+      root.style.setProperty('color-scheme', 'light');
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
