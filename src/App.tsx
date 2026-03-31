@@ -72,12 +72,17 @@ export default function App() {
   // Apply theme class to document
   useEffect(() => {
     const root = window.document.documentElement;
+    const body = window.document.body;
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    
     if (theme === 'dark') {
       root.classList.add('dark');
-      root.style.setProperty('color-scheme', 'dark');
+      body.classList.add('dark');
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#09090b');
     } else {
       root.classList.remove('dark');
-      root.style.setProperty('color-scheme', 'light');
+      body.classList.remove('dark');
+      if (metaThemeColor) metaThemeColor.setAttribute('content', '#fafafa');
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
@@ -718,7 +723,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
   const finishedTasks = tasks.filter(t => t.status === 'finished');
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4 font-sans text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
+    <div className="min-h-screen bg-app-bg flex flex-col items-center justify-center p-4 font-sans text-app-text transition-colors duration-300">
       
       {/* Theme Toggle */}
       <button

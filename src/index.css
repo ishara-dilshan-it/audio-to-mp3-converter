@@ -2,8 +2,28 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --color-app-bg: var(--app-bg);
+  --color-app-text: var(--app-text);
+}
+
+:root {
+  --app-bg: #fafafa; /* zinc-50 */
+  --app-text: #18181b; /* zinc-900 */
+  color-scheme: light;
+}
+
+:root.dark,
+body.dark {
+  --app-bg: #09090b; /* zinc-950 */
+  --app-text: #f4f4f5; /* zinc-100 */
+  color-scheme: dark;
+}
+
 @layer base {
   body {
-    @apply bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300;
+    background-color: var(--app-bg);
+    color: var(--app-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
