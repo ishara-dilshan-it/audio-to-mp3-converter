@@ -1,0 +1,5 @@
+{
+  "name": "Audio to MP3 Converter",
+  "description": "High-quality client-side audio to MP3 converter using FFmpeg.wasm.",
+  "requestFramePermissions": []
+}
