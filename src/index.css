@@ -7,13 +7,15 @@
   --color-app-text: var(--app-text);
 }
 
-:root {
+:root,
+html {
   --app-bg: #fafafa; /* zinc-50 */
   --app-text: #18181b; /* zinc-900 */
   color-scheme: light;
 }
 
 :root.dark,
+html.dark,
 body.dark {
   --app-bg: #09090b; /* zinc-950 */
   --app-text: #f4f4f5; /* zinc-100 */

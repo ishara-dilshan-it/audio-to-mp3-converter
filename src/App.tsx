@@ -127,10 +127,12 @@ export default function App() {
     if (theme === 'dark') {
       root.classList.add('dark');
       body.classList.add('dark');
+      root.style.colorScheme = 'dark';
       if (metaThemeColor) metaThemeColor.setAttribute('content', '#09090b');
     } else {
       root.classList.remove('dark');
       body.classList.remove('dark');
+      root.style.colorScheme = 'light';
       if (metaThemeColor) metaThemeColor.setAttribute('content', '#fafafa');
     }
     localStorage.setItem('theme', theme);
@@ -256,48 +258,48 @@ Note: If you cannot access the transcript directly, provide a summary based on t
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsHistoryOpen(true)}
-              className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors text-zinc-600 dark:text-zinc-400 flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+              className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
               title="View History"
             >
-              <History className="w-4 h-4" />
+              <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               History
             </button>
           </div>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors text-zinc-600 dark:text-zinc-400 flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+            className="p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
             title="Settings"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Settings
           </button>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">YouTube URL</label>
+          <label className="text-[10px] sm:text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">YouTube URL</label>
           <input
             type="text"
             value={url}
             onChange={(e) => setUrl((e.target as HTMLInputElement).value)}
             placeholder="Paste YouTube URL here..."
-            className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full p-2.5 sm:p-3 text-xs sm:text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Video Title (Optional)</label>
+          <label className="text-[10px] sm:text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Video Title (Optional)</label>
           <input
             type="text"
             value={videoTitle}
             onChange={(e) => setVideoTitle((e.target as HTMLInputElement).value)}
             placeholder="Enter video title if known..."
-            className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full p-2.5 sm:p-3 text-xs sm:text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
         <button
           onClick={handleTranscribe}
           disabled={isTranscribing}
-          className="relative w-full py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition disabled:opacity-100 overflow-hidden"
+          className="relative w-full py-2.5 sm:py-3 bg-indigo-600 text-white text-xs sm:text-sm font-bold rounded-xl hover:bg-indigo-700 transition disabled:opacity-100 overflow-hidden"
         >
           {isTranscribing ? (
             <>
@@ -310,10 +312,10 @@ Note: If you cannot access the transcript directly, provide a summary based on t
         </button>
 
         {transcription && (
-          <div className="relative group p-6 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-sm text-zinc-700 dark:text-zinc-300 space-y-4 prose dark:prose-invert max-w-none
-            [&>h3]:text-lg [&>h3]:font-bold [&>h3]:mb-4 [&>h3]:mt-6 [&>h3]:text-zinc-900 dark:[&>h3]:text-white
-            [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:space-y-2 [&>ul]:mb-6
-            [&>p]:mb-4 [&>p]:leading-relaxed">
+          <div className="relative group p-4 sm:p-6 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 space-y-4 prose dark:prose-invert max-w-none
+            [&>h3]:text-base sm:[&>h3]:text-lg [&>h3]:font-bold [&>h3]:mb-3 sm:[&>h3]:mb-4 [&>h3]:mt-5 sm:[&>h3]:mt-6 [&>h3]:text-zinc-900 dark:[&>h3]:text-white
+            [&>ul]:list-disc [&>ul]:ml-5 sm:[&>ul]:ml-6 [&>ul]:space-y-1.5 sm:[&>ul]:space-y-2 [&>ul]:mb-5 sm:[&>ul]:mb-6
+            [&>p]:mb-3 sm:[&>p]:mb-4 [&>p]:leading-relaxed">
             <button
               onClick={() => copyToClipboard(transcription, 'current')}
               className="absolute top-4 right-4 p-2 bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-600 transition-all z-10"
@@ -541,37 +543,37 @@ Note: If you cannot access the transcript directly, provide a summary based on t
   const finishedTasks = tasks.filter(t => t.status === 'finished');
 
   return (
-    <div className="min-h-screen bg-app-bg flex flex-col items-center justify-center p-4 font-sans text-app-text transition-colors duration-300">
+    <div className="min-h-screen bg-app-bg flex flex-col items-center justify-start pt-8 sm:pt-12 p-4 font-sans text-app-text transition-colors duration-300">
       
-      {/* About Button */}
-      <button
-        onClick={() => setIsReadmeOpen(true)}
-        className="absolute top-6 left-6 p-2.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-sm transition-all hover:scale-105 active:scale-95"
-        aria-label="About this app"
-      >
-        <Info className="w-5 h-5" />
-      </button>
-
-      {/* Theme Toggle */}
-      <button
-        onClick={toggleTheme}
-        className="absolute top-6 right-6 p-2.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-sm transition-all hover:scale-105 active:scale-95"
-        aria-label="Toggle theme"
-      >
-        {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-      </button>
-
-      <div className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-xl overflow-hidden border border-zinc-100 dark:border-zinc-800 transition-colors duration-300">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-3xl shadow-xl overflow-hidden border border-zinc-100 dark:border-zinc-800 transition-colors duration-300 mb-8">
         
+        {/* About Button */}
+        <button
+          onClick={() => setIsReadmeOpen(true)}
+          className="absolute top-4 left-4 sm:top-6 sm:left-6 p-2 sm:p-2.5 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-sm transition-all hover:scale-105 active:scale-95 z-20"
+          aria-label="About this app"
+        >
+          <Info className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 sm:p-2.5 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-sm transition-all hover:scale-105 active:scale-95 z-20"
+          aria-label="Toggle theme"
+        >
+          {theme === 'light' ? <Moon className="w-4 h-4 sm:w-5 sm:h-5" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5" />}
+        </button>
+
         {/* Header */}
-        <div className="p-8 text-center border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 transition-colors duration-300">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 mb-4 shadow-sm transition-colors duration-300">
-            {activeTool === 'mp3-converter' ? <Music className="w-8 h-8" /> : <Youtube className="w-8 h-8" />}
+        <div className="p-6 sm:p-8 text-center border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 transition-colors duration-300">
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 mb-3 sm:mb-4 shadow-sm transition-colors duration-300">
+            {activeTool === 'mp3-converter' ? <Music className="w-6 h-6 sm:w-8 sm:h-8" /> : <Youtube className="w-6 h-6 sm:w-8 sm:h-8" />}
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white mb-2 transition-colors duration-300">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-white mb-1.5 sm:mb-2 transition-colors duration-300">
             {activeTool === 'mp3-converter' ? 'Batch MP3 Converter' : 'YouTube Transcriber'}
           </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-sm mx-auto transition-colors duration-300">
+          <p className="text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm max-w-sm mx-auto transition-colors duration-300">
             {activeTool === 'mp3-converter' 
               ? 'Convert multiple audio files to high-quality MP3 simultaneously. 100% private, processed locally.'
               : 'Paste a YouTube URL to transcribe and extract key points and examples.'}
@@ -579,7 +581,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
         </div>
 
         {/* Tool Toggle */}
-        <div className="flex p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl m-6">
+        <div className="flex p-1.5 sm:p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl m-4 sm:m-6">
           <button
             onClick={() => setActiveTool('mp3-converter')}
             className={cn(
@@ -604,16 +606,16 @@ Note: If you cannot access the transcript directly, provide a summary based on t
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {activeTool === 'youtube-transcriber' ? (
             <YoutubeTranscriber />
           ) : (
             <>
               {/* Engine Loading State */}
               {!loaded && isLoading && (
-                <div className="flex flex-col items-center justify-center py-12 text-zinc-500 dark:text-zinc-400 w-full">
-                  <Loader2 className="w-8 h-8 animate-spin text-indigo-500 dark:text-indigo-400 mb-4" />
-                  <p className="text-sm font-medium">Downloading conversion engine...</p>
+                <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-zinc-500 dark:text-zinc-400 w-full">
+                  <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-indigo-500 dark:text-indigo-400 mb-3 sm:mb-4" />
+                  <p className="text-xs sm:text-sm font-medium">Downloading conversion engine...</p>
                   
                   {downloadInfo.loaded > 0 && (
                     <div className="w-full max-w-xs mt-6 space-y-2">
@@ -660,7 +662,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={onDrop}
                     className={cn(
-                      "relative group flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl transition-all duration-200 ease-in-out cursor-pointer overflow-hidden",
+                      "relative group flex flex-col items-center justify-center w-full h-28 sm:h-32 border-2 border-dashed rounded-2xl transition-all duration-200 ease-in-out cursor-pointer overflow-hidden",
                       isDragging 
                         ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10" 
                         : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600"
@@ -674,11 +676,11 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     />
                     <div className="flex flex-col items-center justify-center text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors">
-                      <UploadCloud className={cn("w-8 h-8 mb-2 transition-transform duration-300", isDragging && "scale-110 text-indigo-500 dark:text-indigo-400")} />
-                      <p className="text-sm font-medium mb-1">
+                      <UploadCloud className={cn("w-6 h-6 sm:w-8 sm:h-8 mb-2 transition-transform duration-300", isDragging && "scale-110 text-indigo-500 dark:text-indigo-400")} />
+                      <p className="text-xs sm:text-sm font-medium mb-1">
                         <span className="text-indigo-600 dark:text-indigo-400 font-semibold">Click to upload</span> or drag and drop
                       </p>
-                      <p className="text-xs text-zinc-400 dark:text-zinc-500">Add multiple files</p>
+                      <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500">Add multiple files</p>
                     </div>
                   </div>
 
@@ -699,7 +701,12 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                   </div>
 
                   {/* Tab Content */}
-                  <div className="min-h-[200px]">
+                  <div className={cn(
+                    "transition-all duration-300 ease-in-out",
+                    (activeTab === 'converting' && activeTasks.length === 0) || (activeTab === 'finished' && finishedTasks.length === 0)
+                      ? "min-h-[100px]" 
+                      : "min-h-[200px]"
+                  )}>
                     {activeTab === 'converting' && (
                       <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                         {activeTasks.map(task => (
@@ -738,7 +745,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                           </div>
                         ))}
                         {activeTasks.length === 0 && (
-                          <div className="text-center py-12 text-zinc-500 dark:text-zinc-400 text-sm">
+                          <div className="flex items-center justify-center h-[100px] text-zinc-500 dark:text-zinc-400 text-sm">
                             No files converting. Drop some files above!
                           </div>
                         )}
@@ -771,7 +778,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                           </div>
                         ))}
                         {finishedTasks.length === 0 && (
-                          <div className="text-center py-12 text-zinc-500 dark:text-zinc-400 text-sm">
+                          <div className="flex items-center justify-center h-[100px] text-zinc-500 dark:text-zinc-400 text-sm">
                             No finished conversions yet.
                           </div>
                         )}
@@ -785,75 +792,6 @@ Note: If you cannot access the transcript directly, provide a summary based on t
         </div>
       </div>
 
-      {/* Settings Dialog */}
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
-            >
-              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
-                  Transcription Settings
-                </h2>
-                <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-zinc-500" />
-                </button>
-              </div>
-              <div className="p-6 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Gemini API Configuration</label>
-                  {!process.env.GEMINI_API_KEY && (
-                    <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                          <AlertCircle className="w-4 h-4" />
-                          <span className="text-xs font-bold uppercase tracking-wider">API Key Required</span>
-                        </div>
-                        <a 
-                          href="https://aistudio.google.com/app/apikey" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-[10px] font-bold text-amber-700 dark:text-amber-500 underline hover:text-amber-900 dark:hover:text-amber-300 transition-colors uppercase tracking-wider"
-                        >
-                          Get Key
-                        </a>
-                      </div>
-                      <input
-                        type="password"
-                        value={userApiKey}
-                        onChange={(e) => {
-                          const val = (e.target as HTMLInputElement).value;
-                          setUserApiKey(val);
-                          localStorage.setItem('GEMINI_API_KEY', val);
-                        }}
-                        placeholder="Paste your Gemini API Key here..."
-                        className="w-full p-2.5 text-sm rounded-lg border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                      <p className="mt-2 text-[10px] text-amber-600/80 dark:text-amber-500/60 leading-tight">
-                        Your key is stored locally in your browser and never sent to our servers.
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-800">
-                  <button
-                    onClick={() => setIsSettingsOpen(false)}
-                    className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:opacity-90 transition"
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
       {/* History Dialog */}
       <AnimatePresence>
         {isHistoryOpen && (
@@ -862,28 +800,28 @@ Note: If you cannot access the transcript directly, provide a summary based on t
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-zinc-900 w-full max-w-2xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col"
+              className="bg-white dark:bg-zinc-900 w-full max-w-2xl h-[85vh] sm:h-[80vh] rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col"
             >
-              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <History className="w-5 h-5" />
+              <div className="p-4 sm:p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <History className="w-4 h-4 sm:w-5 sm:h-5" />
                   Transcription History
                 </h2>
                 <div className="flex items-center gap-2">
                   {history.length > 0 && (
                     <button
                       onClick={clearHistory}
-                      className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors uppercase tracking-wider mr-4"
+                      className="text-[10px] sm:text-xs font-semibold text-red-500 hover:text-red-600 transition-colors uppercase tracking-wider mr-2 sm:mr-4"
                     >
                       Clear All
                     </button>
                   )}
-                  <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                    <X className="w-5 h-5 text-zinc-500" />
+                  <button onClick={() => setIsHistoryOpen(false)} className="p-1.5 sm:p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500" />
                   </button>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
                 {history.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-2">
                     <Clock className="w-12 h-12 opacity-20" />
@@ -957,16 +895,16 @@ Note: If you cannot access the transcript directly, provide a summary based on t
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
             >
-              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
+              <div className="p-4 sm:p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
                   Transcription Settings
                 </h2>
-                <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-zinc-500" />
+                <button onClick={() => setIsSettingsOpen(false)} className="p-1.5 sm:p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                  <X className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500" />
                 </button>
               </div>
-              <div className="p-6 space-y-6">
+              <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">AI Model</label>
                   <select
@@ -1023,106 +961,13 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                   </div>
                 )}
               </div>
-              <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-800">
+              <div className="p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-800">
                 <button
                   onClick={() => setIsSettingsOpen(false)}
-                  className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:opacity-90 transition"
+                  className="w-full py-2.5 sm:py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl text-xs sm:text-sm font-bold hover:opacity-90 transition"
                 >
                   Done
                 </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* History Dialog */}
-      <AnimatePresence>
-        {isHistoryOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-zinc-900 w-full max-w-2xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col"
-            >
-              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <History className="w-5 h-5" />
-                  Transcription History
-                </h2>
-                <div className="flex items-center gap-2">
-                  {history.length > 0 && (
-                    <button
-                      onClick={clearHistory}
-                      className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors uppercase tracking-wider mr-4"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                  <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                    <X className="w-5 h-5 text-zinc-500" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {history.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-2">
-                    <Clock className="w-12 h-12 opacity-20" />
-                    <p className="text-sm font-medium">No history yet</p>
-                  </div>
-                ) : (
-                  history.map((item) => (
-                    <div key={item.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-indigo-500/50 transition-all group">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="space-y-1">
-                          <h3 className="text-sm font-bold text-zinc-900 dark:text-white line-clamp-1">{item.title}</h3>
-                          <div className="flex items-center gap-3 text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-widest font-semibold">
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {new Date(item.timestamp).toLocaleDateString()}
-                            </span>
-                            <span className="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-700 rounded text-zinc-600 dark:text-zinc-300">
-                              {item.model.split('-')[1]}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => copyToClipboard(item.content, item.id)}
-                            className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors text-zinc-500 dark:text-zinc-400"
-                            title="Copy content"
-                          >
-                            {copySuccess === item.id ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-500" />
-                            ) : (
-                              <Copy className="w-3.5 h-3.5" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => deleteHistoryItem(item.id)}
-                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-colors text-zinc-500 dark:text-zinc-400 hover:text-red-500"
-                            title="Delete item"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 mb-3 leading-relaxed">
-                        {item.content.replace(/[#*]/g, '').substring(0, 150)}...
-                      </p>
-                      <button
-                        onClick={() => {
-                          setTranscription(item.content);
-                          setIsHistoryOpen(false);
-                        }}
-                        className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 uppercase tracking-widest flex items-center gap-1"
-                      >
-                        View Full Transcription
-                      </button>
-                    </div>
-                  ))
-                )}
               </div>
             </motion.div>
           </div>
@@ -1137,42 +982,42 @@ Note: If you cannot access the transcript directly, provide a summary based on t
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-zinc-900 w-full max-w-2xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col"
+              className="bg-white dark:bg-zinc-900 w-full max-w-2xl h-[85vh] sm:h-[80vh] rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col"
             >
-              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <Info className="w-5 h-5" />
+              <div className="p-4 sm:p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Info className="w-4 h-4 sm:w-5 sm:h-5" />
                   About WANX Converter
                 </h2>
-                <button onClick={() => setIsReadmeOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-zinc-500" />
+                <button onClick={() => setIsReadmeOpen(false)} className="p-1.5 sm:p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                  <X className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-8">
+              <div className="flex-1 overflow-y-auto p-5 sm:p-8">
                 {/* Video Tutorial Section */}
-                <div className="mb-10">
-                  <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-                    <div className="w-2 h-6 bg-indigo-600 rounded-full" />
+                <div className="mb-8 sm:mb-10">
+                  <h3 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
+                    <div className="w-1.5 h-5 sm:w-2 sm:h-6 bg-indigo-600 rounded-full" />
                     Video Tutorial
                   </h3>
                   <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 shadow-lg group">
                     {/* Fallback UI since Google Drive embedding is often blocked in iframes */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                      <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-xl group-hover:scale-110 transition-transform">
-                        <Play className="w-8 h-8 text-white fill-current" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 sm:p-6 text-center">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-indigo-600 rounded-full flex items-center justify-center mb-3 sm:mb-4 shadow-xl group-hover:scale-110 transition-transform">
+                        <Play className="w-6 h-6 sm:w-8 sm:h-8 text-white fill-current ml-1" />
                       </div>
-                      <h4 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Watch the Screen Record</h4>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 max-w-xs mx-auto">
-                        Google Drive video embedding is restricted in some browsers. Click below to watch the tutorial in a new tab.
+                      <h4 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white mb-1 sm:mb-2">Watch Tutorial</h4>
+                      <p className="text-[10px] sm:text-sm text-zinc-500 dark:text-zinc-400 mb-4 sm:mb-6 max-w-[200px] sm:max-w-xs mx-auto line-clamp-2 sm:line-clamp-none">
+                        Google Drive video embedding is restricted in some browsers. Click below to watch in a new tab.
                       </p>
                       <a 
                         href="https://drive.google.com/file/d/1ywiBLxFOyjkem-Ke-I5yJIltfRG-rjwM/view?usp=sharing"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition flex items-center gap-2"
+                        className="px-4 py-2 sm:px-6 sm:py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition flex items-center gap-2 text-xs sm:text-sm"
                       >
                         Open Tutorial
-                        <ExternalLink className="w-4 h-4" />
+                        <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
                       </a>
                     </div>
                   </div>
@@ -1182,13 +1027,13 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                 </div>
 
                 <div className="prose dark:prose-invert max-w-none
-                  [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-6
-                  [&>h2]:text-xl [&>h2]:font-bold [&>h2]:mt-8 [&>h2]:mb-4
-                  [&>h3]:text-lg [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-2
-                  [&>p]:mb-4 [&>p]:leading-relaxed
-                  [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:space-y-2 [&>ul]:mb-6
-                  [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:space-y-2 [&>ol]:mb-6
-                  [&>hr]:my-8 [&>hr]:border-zinc-200 dark:[&>hr]:border-zinc-800">
+                  [&>h1]:text-xl sm:[&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-4 sm:[&>h1]:mb-6
+                  [&>h2]:text-lg sm:[&>h2]:text-xl [&>h2]:font-bold [&>h2]:mt-6 sm:[&>h2]:mt-8 [&>h2]:mb-3 sm:[&>h2]:mb-4
+                  [&>h3]:text-base sm:[&>h3]:text-lg [&>h3]:font-bold [&>h3]:mt-5 sm:[&>h3]:mt-6 [&>h3]:mb-2
+                  [&>p]:mb-3 sm:[&>p]:mb-4 [&>p]:leading-relaxed [&>p]:text-xs sm:[&>p]:text-sm
+                  [&>ul]:list-disc [&>ul]:ml-5 sm:[&>ul]:ml-6 [&>ul]:space-y-1.5 sm:[&>ul]:space-y-2 [&>ul]:mb-5 sm:[&>ul]:mb-6 [&>ul]:text-xs sm:[&>ul]:text-sm
+                  [&>ol]:list-decimal [&>ol]:ml-5 sm:[&>ol]:ml-6 [&>ol]:space-y-1.5 sm:[&>ol]:space-y-2 [&>ol]:mb-5 sm:[&>ol]:mb-6 [&>ol]:text-xs sm:[&>ol]:text-sm
+                  [&>hr]:my-6 sm:[&>hr]:my-8 [&>hr]:border-zinc-200 dark:[&>hr]:border-zinc-800">
                   <ReactMarkdown>
 {`# WANX Audio to MP3 Converter v1.0
 
