@@ -9,7 +9,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
-import { UploadCloud, FileAudio, Loader2, Download, CheckCircle2, Music, AlertCircle, Sun, Moon, Youtube, FileText, Copy, Trash2, Clock, Check, Settings, History, X } from 'lucide-react';
+import { UploadCloud, FileAudio, Loader2, Download, CheckCircle2, Music, AlertCircle, Sun, Moon, Youtube, FileText, Copy, Trash2, Clock, Check, Settings, History, X, Info, Play, ExternalLink } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { GoogleGenAI } from '@google/genai';
@@ -44,6 +44,55 @@ interface TranscriptionHistoryItem {
 
 export default function App() {
   const [activeTool, setActiveTool] = useState<'mp3-converter' | 'youtube-transcriber'>('mp3-converter');
+  const [isReadmeOpen, setIsReadmeOpen] = useState(false);
+  const [url, setUrl] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
+  const [selectedModel, setSelectedModel] = useState('gemini-3-flash-preview');
+  const [useSearch, setUseSearch] = useState(false);
+  const [transcription, setTranscription] = useState('');
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [copySuccess, setCopySuccess] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const [history, setHistory] = useState<TranscriptionHistoryItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('transcription_history');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('transcription_history', JSON.stringify(history));
+  }, [history]);
+
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(id);
+      setTimeout(() => setCopySuccess(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  const deleteHistoryItem = (id: string) => {
+    setHistory(prev => prev.filter(item => item.id !== id));
+  };
+
+  const clearHistory = () => {
+    if (window.confirm('Are you sure you want to clear all transcription history?')) {
+      setHistory([]);
+    }
+  };
+
+  const [userApiKey, setUserApiKey] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('GEMINI_API_KEY') || '';
+    }
+    return '';
+  });
   const [loaded, setLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,55 +141,6 @@ export default function App() {
   };
 
   const YoutubeTranscriber = () => {
-    const [url, setUrl] = useState('');
-    const [videoTitle, setVideoTitle] = useState('');
-    const [selectedModel, setSelectedModel] = useState('gemini-3-flash-preview');
-    const [useSearch, setUseSearch] = useState(false);
-    const [transcription, setTranscription] = useState('');
-    const [isTranscribing, setIsTranscribing] = useState(false);
-    const [copySuccess, setCopySuccess] = useState<string | null>(null);
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-
-    const [history, setHistory] = useState<TranscriptionHistoryItem[]>(() => {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('transcription_history');
-        return saved ? JSON.parse(saved) : [];
-      }
-      return [];
-    });
-
-    useEffect(() => {
-      localStorage.setItem('transcription_history', JSON.stringify(history));
-    }, [history]);
-
-    const copyToClipboard = async (text: string, id: string) => {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopySuccess(id);
-        setTimeout(() => setCopySuccess(null), 2000);
-      } catch (err) {
-        console.error('Failed to copy text: ', err);
-      }
-    };
-
-    const deleteHistoryItem = (id: string) => {
-      setHistory(prev => prev.filter(item => item.id !== id));
-    };
-
-    const clearHistory = () => {
-      if (window.confirm('Are you sure you want to clear all transcription history?')) {
-        setHistory([]);
-      }
-    };
-
-    const [userApiKey, setUserApiKey] = useState(() => {
-      if (typeof window !== 'undefined') {
-        return localStorage.getItem('GEMINI_API_KEY') || '';
-      }
-      return '';
-    });
-
     const effectiveApiKey = process.env.GEMINI_API_KEY || userApiKey;
 
     const handleTranscribe = async () => {
@@ -341,188 +341,6 @@ Note: If you cannot access the transcript directly, provide a summary based on t
             </ReactMarkdown>
           </div>
         )}
-
-        {/* Settings Dialog */}
-        <AnimatePresence>
-          {isSettingsOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
-              >
-                <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                    <Settings className="w-5 h-5" />
-                    Transcription Settings
-                  </h2>
-                  <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                    <X className="w-5 h-5 text-zinc-500" />
-                  </button>
-                </div>
-                <div className="p-6 space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">AI Model</label>
-                    <select
-                      value={selectedModel}
-                      onChange={(e) => setSelectedModel((e.target as HTMLSelectElement).value)}
-                      className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
-                    >
-                      <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro (Best Reasoning)</option>
-                      <option value="gemini-3-flash-preview">Gemini 3 Flash (Fast & Balanced)</option>
-                      <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite (Fastest)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Search Mode</label>
-                    <select
-                      value={useSearch ? 'true' : 'false'}
-                      onChange={(e) => setUseSearch((e.target as HTMLSelectElement).value === 'true')}
-                      className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
-                    >
-                      <option value="false">Standard (Faster, avoids rate limits)</option>
-                      <option value="true">Enhanced (Uses Search, prone to limits)</option>
-                    </select>
-                  </div>
-                  {!process.env.GEMINI_API_KEY && (
-                    <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
-                          <AlertCircle className="w-4 h-4" />
-                          <span className="text-xs font-bold uppercase tracking-wider">API Key Required</span>
-                        </div>
-                        <a 
-                          href="https://aistudio.google.com/app/apikey" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-[10px] font-bold text-amber-700 dark:text-amber-500 underline hover:text-amber-900 dark:hover:text-amber-300 transition-colors uppercase tracking-wider"
-                        >
-                          Get Key
-                        </a>
-                      </div>
-                      <input
-                        type="password"
-                        value={userApiKey}
-                        onChange={(e) => {
-                          const val = (e.target as HTMLInputElement).value;
-                          setUserApiKey(val);
-                          localStorage.setItem('GEMINI_API_KEY', val);
-                        }}
-                        placeholder="Paste your Gemini API Key here..."
-                        className="w-full p-2.5 text-sm rounded-lg border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                      <p className="mt-2 text-[10px] text-amber-600/80 dark:text-amber-500/60 leading-tight">
-                        Your key is stored locally in your browser and never sent to our servers.
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-800">
-                  <button
-                    onClick={() => setIsSettingsOpen(false)}
-                    className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:opacity-90 transition"
-                  >
-                    Done
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-        {/* History Dialog */}
-        <AnimatePresence>
-          {isHistoryOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="bg-white dark:bg-zinc-900 w-full max-w-2xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col"
-              >
-                <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                    <History className="w-5 h-5" />
-                    Transcription History
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    {history.length > 0 && (
-                      <button
-                        onClick={clearHistory}
-                        className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors uppercase tracking-wider mr-4"
-                      >
-                        Clear All
-                      </button>
-                    )}
-                    <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
-                      <X className="w-5 h-5 text-zinc-500" />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                  {history.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-2">
-                      <Clock className="w-12 h-12 opacity-20" />
-                      <p className="text-sm font-medium">No history yet</p>
-                    </div>
-                  ) : (
-                    history.map((item) => (
-                      <div key={item.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-indigo-500/50 transition-all group">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="space-y-1">
-                            <h3 className="text-sm font-bold text-zinc-900 dark:text-white line-clamp-1">{item.title}</h3>
-                            <div className="flex items-center gap-3 text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-widest font-semibold">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {new Date(item.timestamp).toLocaleDateString()}
-                              </span>
-                              <span className="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-700 rounded text-zinc-600 dark:text-zinc-300">
-                                {item.model.split('-')[1]}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => copyToClipboard(item.content, item.id)}
-                              className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors text-zinc-500 dark:text-zinc-400"
-                              title="Copy content"
-                            >
-                              {copySuccess === item.id ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-500" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => deleteHistoryItem(item.id)}
-                              className="p-1.5 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-colors text-zinc-500 dark:text-zinc-400 hover:text-red-500"
-                              title="Delete item"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                        <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 mb-3 leading-relaxed">
-                          {item.content.replace(/[#*]/g, '').substring(0, 150)}...
-                        </p>
-                        <button
-                          onClick={() => {
-                            setTranscription(item.content);
-                            setIsHistoryOpen(false);
-                          }}
-                          className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 uppercase tracking-widest flex items-center gap-1"
-                        >
-                          View Full Transcription
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
       </div>
     );
   };
@@ -725,6 +543,15 @@ Note: If you cannot access the transcript directly, provide a summary based on t
   return (
     <div className="min-h-screen bg-app-bg flex flex-col items-center justify-center p-4 font-sans text-app-text transition-colors duration-300">
       
+      {/* About Button */}
+      <button
+        onClick={() => setIsReadmeOpen(true)}
+        className="absolute top-6 left-6 p-2.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-sm transition-all hover:scale-105 active:scale-95"
+        aria-label="About this app"
+      >
+        <Info className="w-5 h-5" />
+      </button>
+
       {/* Theme Toggle */}
       <button
         onClick={toggleTheme}
@@ -957,6 +784,485 @@ Note: If you cannot access the transcript directly, provide a summary based on t
           )}
         </div>
       </div>
+
+      {/* Settings Dialog */}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
+            >
+              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Transcription Settings
+                </h2>
+                <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-zinc-500" />
+                </button>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Gemini API Configuration</label>
+                  {!process.env.GEMINI_API_KEY && (
+                    <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
+                          <AlertCircle className="w-4 h-4" />
+                          <span className="text-xs font-bold uppercase tracking-wider">API Key Required</span>
+                        </div>
+                        <a 
+                          href="https://aistudio.google.com/app/apikey" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-bold text-amber-700 dark:text-amber-500 underline hover:text-amber-900 dark:hover:text-amber-300 transition-colors uppercase tracking-wider"
+                        >
+                          Get Key
+                        </a>
+                      </div>
+                      <input
+                        type="password"
+                        value={userApiKey}
+                        onChange={(e) => {
+                          const val = (e.target as HTMLInputElement).value;
+                          setUserApiKey(val);
+                          localStorage.setItem('GEMINI_API_KEY', val);
+                        }}
+                        placeholder="Paste your Gemini API Key here..."
+                        className="w-full p-2.5 text-sm rounded-lg border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                      <p className="mt-2 text-[10px] text-amber-600/80 dark:text-amber-500/60 leading-tight">
+                        Your key is stored locally in your browser and never sent to our servers.
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-800">
+                  <button
+                    onClick={() => setIsSettingsOpen(false)}
+                    className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:opacity-90 transition"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* History Dialog */}
+      <AnimatePresence>
+        {isHistoryOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-zinc-900 w-full max-w-2xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col"
+            >
+              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <History className="w-5 h-5" />
+                  Transcription History
+                </h2>
+                <div className="flex items-center gap-2">
+                  {history.length > 0 && (
+                    <button
+                      onClick={clearHistory}
+                      className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors uppercase tracking-wider mr-4"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                  <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                    <X className="w-5 h-5 text-zinc-500" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {history.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-2">
+                    <Clock className="w-12 h-12 opacity-20" />
+                    <p className="text-sm font-medium">No history yet</p>
+                  </div>
+                ) : (
+                  history.map((item) => (
+                    <div key={item.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-indigo-500/50 transition-all group">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-bold text-zinc-900 dark:text-white line-clamp-1">{item.title}</h3>
+                          <div className="flex items-center gap-3 text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-widest font-semibold">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {new Date(item.timestamp).toLocaleDateString()}
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-700 rounded text-zinc-600 dark:text-zinc-300">
+                              {item.model.split('-')[1]}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => copyToClipboard(item.content, item.id)}
+                            className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors text-zinc-500 dark:text-zinc-400"
+                            title="Copy content"
+                          >
+                            {copySuccess === item.id ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => deleteHistoryItem(item.id)}
+                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-colors text-zinc-500 dark:text-zinc-400 hover:text-red-500"
+                            title="Delete item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 mb-3 leading-relaxed">
+                        {item.content.replace(/[#*]/g, '').substring(0, 150)}...
+                      </p>
+                      <button
+                        onClick={() => {
+                          setTranscription(item.content);
+                          setIsHistoryOpen(false);
+                        }}
+                        className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 uppercase tracking-widest flex items-center gap-1"
+                      >
+                        View Full Transcription
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Settings Dialog */}
+      <AnimatePresence>
+        {isSettingsOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800"
+            >
+              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Transcription Settings
+                </h2>
+                <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-zinc-500" />
+                </button>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">AI Model</label>
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel((e.target as HTMLSelectElement).value)}
+                    className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
+                  >
+                    <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro (Best Reasoning)</option>
+                    <option value="gemini-3-flash-preview">Gemini 3 Flash (Fast & Balanced)</option>
+                    <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite (Fastest)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Search Mode</label>
+                  <select
+                    value={useSearch ? 'true' : 'false'}
+                    onChange={(e) => setUseSearch((e.target as HTMLSelectElement).value === 'true')}
+                    className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer"
+                  >
+                    <option value="false">Standard (Faster, avoids rate limits)</option>
+                    <option value="true">Enhanced (Uses Search, prone to limits)</option>
+                  </select>
+                </div>
+                {!process.env.GEMINI_API_KEY && (
+                  <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="text-xs font-bold uppercase tracking-wider">API Key Required</span>
+                      </div>
+                      <a 
+                        href="https://aistudio.google.com/app/apikey" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold text-amber-700 dark:text-amber-500 underline hover:text-amber-900 dark:hover:text-amber-300 transition-colors uppercase tracking-wider"
+                      >
+                        Get Key
+                      </a>
+                    </div>
+                    <input
+                      type="password"
+                      value={userApiKey}
+                      onChange={(e) => {
+                        const val = (e.target as HTMLInputElement).value;
+                        setUserApiKey(val);
+                        localStorage.setItem('GEMINI_API_KEY', val);
+                      }}
+                      placeholder="Paste your Gemini API Key here..."
+                      className="w-full p-2.5 text-sm rounded-lg border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <p className="mt-2 text-[10px] text-amber-600/80 dark:text-amber-500/60 leading-tight">
+                      Your key is stored locally in your browser and never sent to our servers.
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-800">
+                <button
+                  onClick={() => setIsSettingsOpen(false)}
+                  className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:opacity-90 transition"
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* History Dialog */}
+      <AnimatePresence>
+        {isHistoryOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-zinc-900 w-full max-w-2xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col"
+            >
+              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <History className="w-5 h-5" />
+                  Transcription History
+                </h2>
+                <div className="flex items-center gap-2">
+                  {history.length > 0 && (
+                    <button
+                      onClick={clearHistory}
+                      className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors uppercase tracking-wider mr-4"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                  <button onClick={() => setIsHistoryOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                    <X className="w-5 h-5 text-zinc-500" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {history.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-zinc-500 space-y-2">
+                    <Clock className="w-12 h-12 opacity-20" />
+                    <p className="text-sm font-medium">No history yet</p>
+                  </div>
+                ) : (
+                  history.map((item) => (
+                    <div key={item.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-indigo-500/50 transition-all group">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="space-y-1">
+                          <h3 className="text-sm font-bold text-zinc-900 dark:text-white line-clamp-1">{item.title}</h3>
+                          <div className="flex items-center gap-3 text-[10px] text-zinc-500 dark:text-zinc-400 uppercase tracking-widest font-semibold">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {new Date(item.timestamp).toLocaleDateString()}
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-700 rounded text-zinc-600 dark:text-zinc-300">
+                              {item.model.split('-')[1]}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => copyToClipboard(item.content, item.id)}
+                            className="p-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg transition-colors text-zinc-500 dark:text-zinc-400"
+                            title="Copy content"
+                          >
+                            {copySuccess === item.id ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => deleteHistoryItem(item.id)}
+                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-colors text-zinc-500 dark:text-zinc-400 hover:text-red-500"
+                            title="Delete item"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 mb-3 leading-relaxed">
+                        {item.content.replace(/[#*]/g, '').substring(0, 150)}...
+                      </p>
+                      <button
+                        onClick={() => {
+                          setTranscription(item.content);
+                          setIsHistoryOpen(false);
+                        }}
+                        className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 uppercase tracking-widest flex items-center gap-1"
+                      >
+                        View Full Transcription
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Readme Dialog */}
+      <AnimatePresence>
+        {isReadmeOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-zinc-900 w-full max-w-2xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col"
+            >
+              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Info className="w-5 h-5" />
+                  About WANX Converter
+                </h2>
+                <button onClick={() => setIsReadmeOpen(false)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-zinc-500" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-8">
+                {/* Video Tutorial Section */}
+                <div className="mb-10">
+                  <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                    <div className="w-2 h-6 bg-indigo-600 rounded-full" />
+                    Video Tutorial
+                  </h3>
+                  <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 shadow-lg group">
+                    {/* Fallback UI since Google Drive embedding is often blocked in iframes */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                      <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mb-4 shadow-xl group-hover:scale-110 transition-transform">
+                        <Play className="w-8 h-8 text-white fill-current" />
+                      </div>
+                      <h4 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Watch the Screen Record</h4>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6 max-w-xs mx-auto">
+                        Google Drive video embedding is restricted in some browsers. Click below to watch the tutorial in a new tab.
+                      </p>
+                      <a 
+                        href="https://drive.google.com/file/d/1ywiBLxFOyjkem-Ke-I5yJIltfRG-rjwM/view?usp=sharing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition flex items-center gap-2"
+                      >
+                        Open Tutorial
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400 italic">
+                    Learn how to use the MP3 Converter and YouTube Transcriber effectively.
+                  </p>
+                </div>
+
+                <div className="prose dark:prose-invert max-w-none
+                  [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-6
+                  [&>h2]:text-xl [&>h2]:font-bold [&>h2]:mt-8 [&>h2]:mb-4
+                  [&>h3]:text-lg [&>h3]:font-bold [&>h3]:mt-6 [&>h3]:mb-2
+                  [&>p]:mb-4 [&>p]:leading-relaxed
+                  [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:space-y-2 [&>ul]:mb-6
+                  [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:space-y-2 [&>ol]:mb-6
+                  [&>hr]:my-8 [&>hr]:border-zinc-200 dark:[&>hr]:border-zinc-800">
+                  <ReactMarkdown>
+{`# WANX Audio to MP3 Converter v1.0
+
+A powerful, privacy-focused Progressive Web App (PWA) that offers local media conversion and AI-powered YouTube transcription.
+
+## 🚀 Features
+
+### 1. Batch MP3 Converter
+Convert any media file (audio or video) to high-quality MP3 directly in your browser.
+- **100% Private**: All processing happens locally on your device using FFmpeg (WebAssembly). No files are ever uploaded to a server.
+- **Batch Processing**: Convert multiple files simultaneously.
+- **Fast & Reliable**: High-quality output with real-time progress tracking.
+
+### 2. YouTube Transcriber
+Extract key points, summaries, and examples from any YouTube video using Google's Gemini AI.
+- **AI-Powered**: Uses advanced LLMs to identify the most important parts of a video.
+- **Structured Output**: Get summaries with timestamps, key points, and examples.
+- **History Tracking**: Keep track of your previous transcriptions locally.
+
+---
+
+## 🛠️ How to Use
+
+### 🎥 Video Tutorial
+Watch the [Screen Record / Tutorial](https://drive.google.com/file/d/1ywiBLxFOyjkem-Ke-I5yJIltfRG-rjwM/view?usp=sharing) to see how to use both tools effectively.
+
+### Tool 1: MP3 Converter
+1. Select the **'MP3 Converter'** tool from the toggle.
+2. Drag and drop your media files (MP4, WAV, AAC, etc.) into the upload area.
+3. The conversion starts automatically.
+4. Download your finished MP3 files once complete.
+
+### Tool 2: YouTube Transcriber
+1. Select the **'YouTube Transcriber'** tool.
+2. **One-Time Setup**: Click the **Settings** icon and paste your [Gemini API Key](https://aistudio.google.com/app/apikey).
+3. Enter the YouTube URL.
+4. (Optional) Enter the video title to help the AI identify the source more accurately.
+5. Click **Transcribe** and wait for the AI to generate your summary.
+
+---
+
+## 📱 Installation (PWA)
+This app is designed to work as a native app on your mobile device:
+
+1. Open the app URL in your mobile browser (**Chrome** for Android, **Safari** for iOS).
+2. Tap the **Menu** (⋮) or **Share** button.
+3. Select **"Add to Home Screen"** or **"Install App"**.
+4. Launch the app from your home screen for a full-screen, offline-capable experience.
+
+---
+
+## 🔒 Privacy & Security
+- **Local Conversion**: Your audio/video files never leave your device.
+- **Secure API Storage**: Your Gemini API key is stored only in your browser's local storage and is never sent to our servers.
+
+---
+
+## 📄 License
+SPDX-License-Identifier: Apache-2.0`}
+                  </ReactMarkdown>
+                </div>
+              </div>
+              <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-100 dark:border-zinc-800">
+                <button
+                  onClick={() => setIsReadmeOpen(false)}
+                  className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold hover:opacity-90 transition"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

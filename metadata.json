@@ -1,5 +1,5 @@
 {
-  "name": "Audio to MP3 Converter",
-  "description": "High-quality client-side audio to MP3 converter using FFmpeg.wasm.",
+  "name": "WANX Audio to MP3 Converter v1.0",
+  "description": "A powerful, privacy-focused PWA that offers local media conversion and AI-powered YouTube transcription.",
   "requestFramePermissions": []
 }
