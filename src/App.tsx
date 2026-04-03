@@ -4,6 +4,7 @@
  */
 
 /// <reference lib="dom" />
+/// <reference types="vite/client" />
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -18,6 +19,17 @@ import ReactMarkdown from 'react-markdown';
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// Base URL for API calls. Set VITE_API_BASE_URL at build time for production
+// (e.g. https://your-backend.onrender.com). Empty string falls back to same-origin (local dev).
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
+// YouTube import needs the Express backend. Available when running locally OR
+// when VITE_API_BASE_URL is configured at build time (Render backend).
+const IS_API_AVAILABLE =
+  !!import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'));
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -104,7 +116,7 @@ export default function App() {
     setYoutubeError(null);
     setYoutubeVideoInfo(null);
     try {
-      const res = await fetch(`/api/youtube/info?url=${encodeURIComponent(youtubeDownloadUrl)}`);
+      const res = await fetch(`${API_BASE}/api/youtube/info?url=${encodeURIComponent(youtubeDownloadUrl)}`);
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.details || err.error || 'Failed to fetch video info');
@@ -725,8 +737,21 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                       <Youtube className="w-4 h-4 text-red-500" />
                       <label className="text-[10px] sm:text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Import from YouTube</label>
                     </div>
+                    {/* Not available on static deployments */}
+                    {!IS_API_AVAILABLE && (
+                      <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
+                        <Info className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <div className="space-y-0.5">
+                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Local server required</p>
+                          <p className="text-[10px] text-amber-600 dark:text-amber-400/80 leading-snug">
+                            YouTube import uses a local backend. Run the app with <span className="font-mono font-bold">start.bat</span> on your machine to use this feature.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Phase 1 — URL input + Preview */}
-                    {!youtubeVideoInfo && (
+                    {IS_API_AVAILABLE && !youtubeVideoInfo && (
                       <div className="flex gap-2">
                         <input
                           type="text"
@@ -751,7 +776,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                     )}
 
                     {/* Phase 2 — Video info card */}
-                    {youtubeVideoInfo && (
+                    {IS_API_AVAILABLE && youtubeVideoInfo && (
                       <div className="flex items-start gap-3 p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl">
                         {youtubeVideoInfo.thumbnail && (
                           <img
@@ -796,7 +821,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                     <p className="text-[10px] text-zinc-400 dark:text-zinc-500 italic">
                       This will fetch the audio and add it to your conversion queue below.
                     </p>
-                    {youtubeError && (
+                    {IS_API_AVAILABLE && youtubeError && (
                       <div className="mt-2 p-3 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl flex items-start gap-2">
                         <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                         <div className="space-y-1">

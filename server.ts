@@ -26,12 +26,14 @@ async function ensureYtDlp(): Promise<typeof YTDlpWrap> {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || '3000', 10);
 
   // Initialise yt-dlp binary in the background (non-blocking)
   const ytDlpReady = ensureYtDlp();
 
-  app.use(cors());
+  app.use(cors({
+    origin: [/localhost/, /127\.0\.0\.1/, /\.github\.io$/],
+  }));
   app.use(express.json());
 
   // Headers required by FFmpeg.wasm (SharedArrayBuffer)
