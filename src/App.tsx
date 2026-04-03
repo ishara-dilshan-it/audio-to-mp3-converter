@@ -19,6 +19,12 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
 type FileStatus = 'queued' | 'converting' | 'finished' | 'error' | 'stopped';
 
 interface ConversionTask {
@@ -47,6 +53,11 @@ export default function App() {
   const [isReadmeOpen, setIsReadmeOpen] = useState(false);
   const [url, setUrl] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
+  const [youtubeDownloadUrl, setYoutubeDownloadUrl] = useState('');
+  const [youtubeVideoInfo, setYoutubeVideoInfo] = useState<{ title: string; thumbnail: string; duration: number; audioSize: number | null } | null>(null);
+  const [isFetchingInfo, setIsFetchingInfo] = useState(false);
+  const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
+  const [youtubeError, setYoutubeError] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState('gemini-3-flash-preview');
   const [useSearch, setUseSearch] = useState(false);
   const [transcription, setTranscription] = useState('');
@@ -84,6 +95,56 @@ export default function App() {
   const clearHistory = () => {
     if (window.confirm('Are you sure you want to clear all transcription history?')) {
       setHistory([]);
+    }
+  };
+
+  const handlePreviewVideo = async () => {
+    if (!youtubeDownloadUrl) return;
+    setIsFetchingInfo(true);
+    setYoutubeError(null);
+    setYoutubeVideoInfo(null);
+    try {
+      const res = await fetch(`/api/youtube/info?url=${encodeURIComponent(youtubeDownloadUrl)}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.details || err.error || 'Failed to fetch video info');
+      }
+      const info = await res.json();
+      setYoutubeVideoInfo(info);
+    } catch (err: any) {
+      console.error('YouTube info error:', err);
+      setYoutubeError(err.message);
+    } finally {
+      setIsFetchingInfo(false);
+    }
+  };
+
+  const handleAddToQueue = async () => {
+    if (!youtubeDownloadUrl || !youtubeVideoInfo) return;
+    setIsDownloadingAudio(true);
+    setYoutubeError(null);
+    try {
+      const downloadRes = await fetch(`/api/youtube/download?url=${encodeURIComponent(youtubeDownloadUrl)}`);
+      if (!downloadRes.ok) {
+        const err = await downloadRes.json();
+        throw new Error(err.error || 'Failed to download audio');
+      }
+      const blob = await downloadRes.blob();
+      const file = new File([blob], `${youtubeVideoInfo.title || 'youtube_audio'}.mp4`, { type: 'video/mp4' });
+      const newTask: ConversionTask = {
+        id: Math.random().toString(36).substring(7),
+        file,
+        status: 'queued',
+        progress: 0,
+      };
+      setTasks(prev => [...prev, newTask]);
+      setYoutubeDownloadUrl('');
+      setYoutubeVideoInfo(null);
+    } catch (err: any) {
+      console.error('YouTube download error:', err);
+      setYoutubeError(err.message);
+    } finally {
+      setIsDownloadingAudio(false);
     }
   };
 
@@ -557,13 +618,15 @@ Note: If you cannot access the transcript directly, provide a summary based on t
         </button>
 
         {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 sm:p-2.5 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-sm transition-all hover:scale-105 active:scale-95 z-20"
-          aria-label="Toggle theme"
-        >
-          {theme === 'light' ? <Moon className="w-4 h-4 sm:w-5 sm:h-5" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5" />}
-        </button>
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex items-center gap-2 z-20">
+          <button
+            onClick={toggleTheme}
+            className="p-2 sm:p-2.5 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-sm transition-all hover:scale-105 active:scale-95"
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? <Moon className="w-4 h-4 sm:w-5 sm:h-5" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5" />}
+          </button>
+        </div>
 
         {/* Header */}
         <div className="p-6 sm:p-8 text-center border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 transition-colors duration-300">
@@ -656,6 +719,103 @@ Note: If you cannot access the transcript directly, provide a summary based on t
               {loaded && (
                 <div className="space-y-6">
                   
+                  {/* YouTube Downloader Section */}
+                  <div className="space-y-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Youtube className="w-4 h-4 text-red-500" />
+                      <label className="text-[10px] sm:text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">Import from YouTube</label>
+                    </div>
+                    {/* Phase 1 — URL input + Preview */}
+                    {!youtubeVideoInfo && (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={youtubeDownloadUrl}
+                          onChange={(e) => { setYoutubeDownloadUrl(e.target.value); setYoutubeError(null); }}
+                          onKeyDown={(e) => e.key === 'Enter' && handlePreviewVideo()}
+                          placeholder="Paste YouTube URL here..."
+                          className={cn(
+                            "flex-1 p-2.5 text-xs sm:text-sm rounded-xl border transition-all",
+                            "border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          )}
+                        />
+                        <button
+                          onClick={handlePreviewVideo}
+                          disabled={isFetchingInfo || !youtubeDownloadUrl}
+                          className="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-2 shrink-0"
+                        >
+                          {isFetchingInfo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                          {isFetchingInfo ? 'Fetching...' : 'Preview'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Phase 2 — Video info card */}
+                    {youtubeVideoInfo && (
+                      <div className="flex items-start gap-3 p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl">
+                        {youtubeVideoInfo.thumbnail && (
+                          <img
+                            src={youtubeVideoInfo.thumbnail}
+                            alt="thumbnail"
+                            className="w-20 h-14 object-cover rounded-lg shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <p className="text-xs font-semibold text-zinc-900 dark:text-white leading-tight line-clamp-2">{youtubeVideoInfo.title}</p>
+                          <div className="flex items-center gap-2 text-[10px] text-zinc-500 dark:text-zinc-400">
+                            <span>{Math.floor(youtubeVideoInfo.duration / 60)}:{String(youtubeVideoInfo.duration % 60).padStart(2, '0')}</span>
+                            {youtubeVideoInfo.audioSize != null && (
+                              <>
+                                <span className="opacity-40">·</span>
+                                <span className="text-indigo-500 dark:text-indigo-400 font-medium">
+                                  {formatBytes(youtubeVideoInfo.audioSize)} audio
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex gap-2 pt-1">
+                            <button
+                              onClick={handleAddToQueue}
+                              disabled={isDownloadingAudio}
+                              className="px-3 py-1.5 bg-indigo-600 text-white text-[10px] font-bold rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                              {isDownloadingAudio ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+                              {isDownloadingAudio ? 'Downloading...' : 'Add to Queue'}
+                            </button>
+                            <button
+                              onClick={() => { setYoutubeVideoInfo(null); setYoutubeDownloadUrl(''); setYoutubeError(null); }}
+                              className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] font-bold rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition flex items-center gap-1.5"
+                            >
+                              <X className="w-3 h-3" /> Clear
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 italic">
+                      This will fetch the audio and add it to your conversion queue below.
+                    </p>
+                    {youtubeError && (
+                      <div className="mt-2 p-3 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-red-600 dark:text-red-400">Import Failed</p>
+                          <p className="text-[10px] text-red-500 dark:text-red-400/80 leading-tight">{youtubeError}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                      <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
+                      <span className="bg-white dark:bg-zinc-900 px-3 text-zinc-400 dark:text-zinc-500">Or Upload Local Files</span>
+                    </div>
+                  </div>
+
                   {/* Dropzone */}
                   <div
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
