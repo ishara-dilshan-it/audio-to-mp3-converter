@@ -11,9 +11,9 @@ export default defineConfig(({mode}) => {
     plugins: [react(), tailwindcss(), VitePWA({ 
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Batch MP3 Converter',
-        short_name: 'MP3 Converter',
-        description: 'Convert multiple audio files to high-quality MP3 simultaneously.',
+        name: 'WANX-OPTIMUM',
+        short_name: 'WANX-OPTIMUM',
+        description: 'Convert audio/video files to MP3 and import from YouTube — all privately in your browser.',
         theme_color: '#ffffff',
         icons: [
           {

@@ -10,7 +10,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
-import { UploadCloud, FileAudio, Loader2, Download, CheckCircle2, Music, AlertCircle, Sun, Moon, Youtube, FileText, Copy, Trash2, Clock, Check, Settings, History, X, Info, Play, ExternalLink } from 'lucide-react';
+import { UploadCloud, FileAudio, Loader2, Download, CheckCircle2, Music, AlertCircle, Sun, Moon, Youtube, FileText, Copy, Trash2, Clock, Check, Settings, History, X, Info, Play, ExternalLink, Plus } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { GoogleGenAI } from '@google/genai';
@@ -64,7 +64,6 @@ export default function App() {
   const [activeTool, setActiveTool] = useState<'mp3-converter' | 'youtube-transcriber'>('mp3-converter');
   const [isReadmeOpen, setIsReadmeOpen] = useState(false);
   const [url, setUrl] = useState('');
-  const [videoTitle, setVideoTitle] = useState('');
   const [youtubeDownloadUrl, setYoutubeDownloadUrl] = useState('');
   const [youtubeVideoInfo, setYoutubeVideoInfo] = useState<{ title: string; thumbnail: string; duration: number; audioSize: number | null } | null>(null);
   const [isFetchingInfo, setIsFetchingInfo] = useState(false);
@@ -172,6 +171,7 @@ export default function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [downloadInfo, setDownloadInfo] = useState({ loaded: 0, total: 0 });
   const isLoadingRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [tasks, setTasks] = useState<ConversionTask[]>([]);
   const [activeTab, setActiveTab] = useState<'converting' | 'finished'>('converting');
@@ -227,7 +227,7 @@ export default function App() {
       setIsTranscribing(true);
       setTranscription('');
       try {
-        console.log("Starting transcription for:", url, videoTitle ? `(Title: ${videoTitle})` : "", `Model: ${selectedModel}`);
+        console.log("Starting transcription for:", url, `Model: ${selectedModel}`);
         const ai = new GoogleGenAI({ apiKey: effectiveApiKey });
         
         // Create a timeout promise (increased to 120s)
@@ -238,10 +238,9 @@ export default function App() {
         const transcriptionPromise = ai.models.generateContent({
           model: selectedModel,
           contents: useSearch 
-            ? `I want you to act as an expert summarizer for the YouTube video located at this exact URL: ${url}. 
-${videoTitle ? `The user has provided the following title for the video: "${videoTitle}". Use this to help identify the correct video.` : ""}
+            ? `I want you to act as an expert summarizer for the YouTube video located at this exact URL: ${url}.
 
-First, use Google Search to identify the exact title and channel name for this video. 
+First, use Google Search to identify the exact title and channel name for this video.
 Then, search for the transcript, detailed summary, or key points of this specific video. 
 
 Please provide the summary in the following exact format:
@@ -271,7 +270,6 @@ IMPORTANT:
 - You MUST make every effort to find the actual timestamps (e.g., [00:07]). If they are absolutely not findable after searching, you may omit the timestamp bracket, but do NOT use the phrase "Timestamp unavailable".
 - If you cannot find the video details at all, explain what you searched for and ask if the user can provide the video title to help you find the transcript.`
             : `I want you to act as an expert summarizer for the YouTube video at: ${url}.
-${videoTitle ? `The video title is: "${videoTitle}".` : ""}
 
 Please access the video content and provide a detailed summary in this format:
 
@@ -302,7 +300,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
           const newItem: TranscriptionHistoryItem = {
             id: Date.now().toString(),
             url,
-            title: videoTitle || 'Untitled Video',
+            title: url,
             content,
             timestamp: Date.now(),
             model: selectedModel
@@ -348,31 +346,55 @@ Note: If you cannot access the transcript directly, provide a summary based on t
           </button>
         </div>
 
+        {!effectiveApiKey && (
+          <div className="space-y-2 p-3 sm:p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-wider">Gemini API Key Required</span>
+              </div>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-bold text-amber-700 dark:text-amber-500 underline hover:text-amber-900 dark:hover:text-amber-300 transition-colors uppercase tracking-wider"
+              >
+                Get free key
+              </a>
+            </div>
+            <input
+              type="password"
+              value={userApiKey}
+              onChange={(e) => {
+                const val = (e.target as HTMLInputElement).value;
+                setUserApiKey(val);
+                localStorage.setItem('GEMINI_API_KEY', val);
+              }}
+              placeholder="Paste your Gemini API Key here..."
+              className="w-full p-2.5 text-sm rounded-lg border border-amber-200 dark:border-amber-500/30 bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <p className="text-[10px] text-amber-600/80 dark:text-amber-500/60 leading-tight">
+              Stored locally in your browser — never sent to any server.
+            </p>
+          </div>
+        )}
+
         <div className="space-y-2">
           <label className="text-[10px] sm:text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">YouTube URL</label>
           <input
             type="text"
             value={url}
             onChange={(e) => setUrl((e.target as HTMLInputElement).value)}
+            onKeyDown={(e) => e.key === 'Enter' && !isTranscribing && handleTranscribe()}
             placeholder="Paste YouTube URL here..."
-            className="w-full p-2.5 sm:p-3 text-xs sm:text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-[10px] sm:text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Video Title (Optional)</label>
-          <input
-            type="text"
-            value={videoTitle}
-            onChange={(e) => setVideoTitle((e.target as HTMLInputElement).value)}
-            placeholder="Enter video title if known..."
             className="w-full p-2.5 sm:p-3 text-xs sm:text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
         <button
           onClick={handleTranscribe}
-          disabled={isTranscribing}
-          className="relative w-full py-2.5 sm:py-3 bg-indigo-600 text-white text-xs sm:text-sm font-bold rounded-xl hover:bg-indigo-700 transition disabled:opacity-100 overflow-hidden"
+          disabled={isTranscribing || !url}
+          className="relative w-full py-2.5 sm:py-3 bg-indigo-600 text-white text-xs sm:text-sm font-bold rounded-xl hover:bg-indigo-700 transition disabled:opacity-50 overflow-hidden"
         >
           {isTranscribing ? (
             <>
@@ -832,43 +854,6 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                     )}
                   </div>
 
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                      <div className="w-full border-t border-zinc-200 dark:border-zinc-800"></div>
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase tracking-widest font-bold">
-                      <span className="bg-white dark:bg-zinc-900 px-3 text-zinc-400 dark:text-zinc-500">Or Upload Local Files</span>
-                    </div>
-                  </div>
-
-                  {/* Dropzone */}
-                  <div
-                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={onDrop}
-                    className={cn(
-                      "relative group flex flex-col items-center justify-center w-full h-28 sm:h-32 border-2 border-dashed rounded-2xl transition-all duration-200 ease-in-out cursor-pointer overflow-hidden",
-                      isDragging 
-                        ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10" 
-                        : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600"
-                    )}
-                  >
-                    <input
-                      type="file"
-                      multiple
-                      accept="audio/*,video/*"
-                      onChange={handleFileInput}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    />
-                    <div className="flex flex-col items-center justify-center text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition-colors">
-                      <UploadCloud className={cn("w-6 h-6 sm:w-8 sm:h-8 mb-2 transition-transform duration-300", isDragging && "scale-110 text-indigo-500 dark:text-indigo-400")} />
-                      <p className="text-xs sm:text-sm font-medium mb-1">
-                        <span className="text-indigo-600 dark:text-indigo-400 font-semibold">Click to upload</span> or drag and drop
-                      </p>
-                      <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500">Add multiple files</p>
-                    </div>
-                  </div>
-
                   {/* Tabs */}
                   <div className="flex border-b border-zinc-200 dark:border-zinc-800">
                     <button 
@@ -885,15 +870,33 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                     </button>
                   </div>
 
+                  {/* Shared hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="audio/*,video/*"
+                    onChange={handleFileInput}
+                    className="hidden"
+                  />
+
                   {/* Tab Content */}
                   <div className={cn(
                     "transition-all duration-300 ease-in-out",
                     (activeTab === 'converting' && activeTasks.length === 0) || (activeTab === 'finished' && finishedTasks.length === 0)
-                      ? "min-h-[100px]" 
+                      ? "min-h-[100px]"
                       : "min-h-[200px]"
                   )}>
                     {activeTab === 'converting' && (
-                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div
+                        className={cn(
+                          "relative space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar rounded-xl transition-all duration-200",
+                          isDragging && activeTasks.length > 0 && "ring-2 ring-indigo-400 ring-inset bg-indigo-50/30 dark:bg-indigo-500/5"
+                        )}
+                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                        onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragging(false); }}
+                        onDrop={onDrop}
+                      >
                         {activeTasks.map(task => (
                           <div key={task.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl transition-colors duration-300">
                             <div className="flex items-center justify-between mb-2">
@@ -918,8 +921,8 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                             </div>
                             {task.status === 'converting' && (
                               <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-1.5 overflow-hidden">
-                                <div 
-                                  className="bg-indigo-500 h-1.5 rounded-full transition-all duration-300 ease-out" 
+                                <div
+                                  className="bg-indigo-500 h-1.5 rounded-full transition-all duration-300 ease-out"
                                   style={{ width: `${task.progress}%` }}
                                 ></div>
                               </div>
@@ -930,9 +933,30 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                           </div>
                         ))}
                         {activeTasks.length === 0 && (
-                          <div className="flex items-center justify-center h-[100px] text-zinc-500 dark:text-zinc-400 text-sm">
-                            No files converting. Drop some files above!
+                          <div
+                            onClick={() => fileInputRef.current?.click()}
+                            className={cn(
+                              "group flex flex-col items-center justify-center h-28 sm:h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
+                              isDragging
+                                ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10"
+                                : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-600"
+                            )}
+                          >
+                            <UploadCloud className={cn("w-7 h-7 mb-2 transition-transform duration-200", isDragging ? "scale-110 text-indigo-500 dark:text-indigo-400" : "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300")} />
+                            <p className="text-xs sm:text-sm font-medium mb-0.5">
+                              <span className="text-indigo-600 dark:text-indigo-400 font-semibold">Click to upload</span> or drag and drop
+                            </p>
+                            <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-500">Add multiple files</p>
                           </div>
+                        )}
+                        {activeTasks.length > 0 && (
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex items-center gap-1.5 w-full justify-center py-2 text-xs text-zinc-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Add more files
+                          </button>
                         )}
                       </div>
                     )}
@@ -1172,7 +1196,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
               <div className="p-4 sm:p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                 <h2 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                   <Info className="w-4 h-4 sm:w-5 sm:h-5" />
-                  About WANX Converter
+                  About WANX-OPTIMUM
                 </h2>
                 <button onClick={() => setIsReadmeOpen(false)} className="p-1.5 sm:p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors">
                   <X className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500" />
@@ -1207,7 +1231,7 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                     </div>
                   </div>
                   <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400 italic">
-                    Learn how to use the MP3 Converter and YouTube Transcriber effectively.
+                    Learn how to use WANX-OPTIMUM — MP3 Converter, YouTube Import, and AI Transcriber.
                   </p>
                 </div>
 
@@ -1220,59 +1244,73 @@ Note: If you cannot access the transcript directly, provide a summary based on t
                   [&>ol]:list-decimal [&>ol]:ml-5 sm:[&>ol]:ml-6 [&>ol]:space-y-1.5 sm:[&>ol]:space-y-2 [&>ol]:mb-5 sm:[&>ol]:mb-6 [&>ol]:text-xs sm:[&>ol]:text-sm
                   [&>hr]:my-6 sm:[&>hr]:my-8 [&>hr]:border-zinc-200 dark:[&>hr]:border-zinc-800">
                   <ReactMarkdown>
-{`# WANX Audio to MP3 Converter v1.0
+{`# WANX-OPTIMUM
 
-A powerful, privacy-focused Progressive Web App (PWA) that offers local media conversion and AI-powered YouTube transcription.
+A privacy-focused Progressive Web App (PWA) with three integrated tools: batch MP3 conversion, YouTube audio import, and AI-powered transcription — all running locally in your browser.
 
 ## 🚀 Features
 
 ### 1. Batch MP3 Converter
-Convert any media file (audio or video) to high-quality MP3 directly in your browser.
-- **100% Private**: All processing happens locally on your device using FFmpeg (WebAssembly). No files are ever uploaded to a server.
-- **Batch Processing**: Convert multiple files simultaneously.
-- **Fast & Reliable**: High-quality output with real-time progress tracking.
+Convert any audio or video file to high-quality MP3 directly in your browser.
+- **100% Private**: All processing uses FFmpeg (WebAssembly) — files never leave your device.
+- **Batch Processing**: Convert multiple files at once with real-time progress.
+- **Drag & Drop**: Drop files directly into the Converting queue — no separate upload step.
+- **Stop & Restart**: Cancel any conversion mid-way and restart if needed.
 
-### 2. YouTube Transcriber
-Extract key points, summaries, and examples from any YouTube video using Google's Gemini AI.
-- **AI-Powered**: Uses advanced LLMs to identify the most important parts of a video.
-- **Structured Output**: Get summaries with timestamps, key points, and examples.
-- **History Tracking**: Keep track of your previous transcriptions locally.
+### 2. Import from YouTube
+Download the audio track from any YouTube video and add it straight to your conversion queue.
+- **Preview First**: Fetch video title, thumbnail, duration, and audio size before downloading.
+- **Audio Only**: Downloads only the audio stream to save bandwidth.
+- **Any Language**: Supports video titles and content in any script or language.
+- **Seamless Queue**: The downloaded audio is added directly to the MP3 Converter queue.
+
+### 3. YouTube Transcriber
+Extract structured summaries and key points from any YouTube video using Google Gemini AI.
+- **Just a URL**: No need to enter a video title — paste the URL and go.
+- **Inline Setup**: First-time users see the API key field directly on screen — no hunting through menus.
+- **AI-Powered**: Identifies the most important moments, examples, and takeaways with timestamps.
+- **Structured Output**: Summaries with key points and examples in a clean readable format.
+- **History Tracking**: Saves previous transcriptions locally in your browser.
 
 ---
 
 ## 🛠️ How to Use
 
 ### 🎥 Video Tutorial
-Watch the [Screen Record / Tutorial](https://drive.google.com/file/d/1ywiBLxFOyjkem-Ke-I5yJIltfRG-rjwM/view?usp=sharing) to see how to use both tools effectively.
+Watch the [Screen Record / Tutorial](https://drive.google.com/file/d/1ywiBLxFOyjkem-Ke-I5yJIltfRG-rjwM/view?usp=sharing) to see all tools in action.
 
 ### Tool 1: MP3 Converter
-1. Select the **'MP3 Converter'** tool from the toggle.
-2. Drag and drop your media files (MP4, WAV, AAC, etc.) into the upload area.
-3. The conversion starts automatically.
-4. Download your finished MP3 files once complete.
+1. Select **'MP3 Converter'** from the tool toggle.
+2. Drag and drop files into the **Converting** tab, or click the drop zone to browse.
+3. Conversion starts automatically. Download finished files from the **Finished** tab.
 
-### Tool 2: YouTube Transcriber
-1. Select the **'YouTube Transcriber'** tool.
-2. **One-Time Setup**: Click the **Settings** icon and paste your [Gemini API Key](https://aistudio.google.com/app/apikey).
-3. Enter the YouTube URL.
-4. (Optional) Enter the video title to help the AI identify the source more accurately.
-5. Click **Transcribe** and wait for the AI to generate your summary.
+### Tool 2: Import from YouTube
+1. Select **'MP3 Converter'** — the YouTube import section is on the same screen.
+2. Paste a YouTube URL and click **Preview** to see video info and audio size.
+3. Click **Add to Queue** to download the audio and add it to the converter.
+4. The file will appear in the Converting tab and convert to MP3 automatically.
+
+### Tool 3: YouTube Transcriber
+1. Select **'YouTube Transcriber'** from the toggle.
+2. If you haven't set an API key yet, an **API Key** field appears automatically — paste your free [Gemini API Key](https://aistudio.google.com/app/apikey) there. This is a one-time step; the key is saved in your browser.
+3. Paste a YouTube URL and press **Enter** or click **Transcribe**.
+4. Use the **Settings** icon to change the AI model or enable Enhanced (search-backed) mode.
 
 ---
 
 ## 📱 Installation (PWA)
-This app is designed to work as a native app on your mobile device:
+Install WANX-OPTIMUM as a native app on your device:
 
-1. Open the app URL in your mobile browser (**Chrome** for Android, **Safari** for iOS).
+1. Open the app URL in **Chrome** (Android) or **Safari** (iOS).
 2. Tap the **Menu** (⋮) or **Share** button.
 3. Select **"Add to Home Screen"** or **"Install App"**.
-4. Launch the app from your home screen for a full-screen, offline-capable experience.
+4. Launch from your home screen for a full-screen, offline-capable experience.
 
 ---
 
 ## 🔒 Privacy & Security
-- **Local Conversion**: Your audio/video files never leave your device.
-- **Secure API Storage**: Your Gemini API key is stored only in your browser's local storage and is never sent to our servers.
+- **Local Conversion**: Audio/video files are processed entirely on your device and never uploaded.
+- **Secure API Storage**: Your Gemini API key is stored only in your browser's local storage.
 
 ---
 
