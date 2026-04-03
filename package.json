@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx server.ts",
     "start": "node --import tsx/esm server.ts",
+    "postinstall": "node scripts/download-yt-dlp.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
