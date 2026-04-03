@@ -118,7 +118,7 @@ async function startServer() {
     }
   });
 
-  // Vite middleware for development (dynamic import keeps Vite out of production bundle)
+  // Vite middleware for local development only
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
@@ -126,13 +126,8 @@ async function startServer() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
   }
+  // Production: frontend is on GitHub Pages — no static serving needed here
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
