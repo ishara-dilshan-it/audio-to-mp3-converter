@@ -55,7 +55,6 @@ async function startServer() {
       const info = await ytDlp.getVideoInfo([
         videoUrl,
         '--extractor-args', 'youtube:player_client=ios,web',
-        '--js-runtimes', 'nodejs',
       ]);
 
       // Find best audio-only format to report its file size
@@ -95,7 +94,6 @@ async function startServer() {
       const info = await ytDlp.getVideoInfo([
         videoUrl,
         '--extractor-args', 'youtube:player_client=ios,web',
-        '--js-runtimes', 'nodejs',
       ]);
       const title = (info.title as string || 'audio').replace(/[\\/:*?"<>|]/g, '');
 
@@ -108,7 +106,6 @@ async function startServer() {
         '-f', 'bestaudio',
         '--no-playlist',
         '--extractor-args', 'youtube:player_client=ios,web',
-        '--js-runtimes', 'nodejs',
         '-o', '-',
         '--quiet',
       ]);
