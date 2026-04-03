@@ -91,7 +91,8 @@ async function startServer() {
       const info = await ytDlp.getVideoInfo([videoUrl]);
       const title = (info.title as string || 'audio').replace(/[\\/:*?"<>|]/g, '');
 
-      res.header('Content-Disposition', `attachment; filename="${title}.mp4"`);
+      const asciiTitle = title.replace(/[^\x20-\x7E]/g, '_').replace(/__+/g, '_').trim() || 'audio';
+      res.header('Content-Disposition', `attachment; filename="${asciiTitle}.mp4"; filename*=UTF-8''${encodeURIComponent(title)}.mp4`);
       res.header('Content-Type', 'audio/mp4');
 
       // Stream best audio directly to response
