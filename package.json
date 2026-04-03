@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
+    "prestart": "node scripts/download-yt-dlp.mjs",
     "start": "node --import tsx/esm server.ts",
-    "postinstall": "node scripts/download-yt-dlp.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",

@@ -16,6 +16,6 @@ try {
   await YTDlpWrap.downloadFromGithub(binary);
   console.log('[yt-dlp] Downloaded to', binary);
 } catch (err) {
-  // Non-fatal — server will retry at startup
-  console.warn('[yt-dlp] Download skipped:', err.message);
+  console.error('[yt-dlp] Download failed:', err.message);
+  process.exit(1);
 }
