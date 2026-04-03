@@ -52,10 +52,7 @@ async function startServer() {
 
     try {
       const ytDlp = await ytDlpReady;
-      const info = await ytDlp.getVideoInfo([
-        videoUrl,
-        '--extractor-args', 'youtube:player_client=ios,web',
-      ]);
+      const info = await ytDlp.getVideoInfo([videoUrl]);
 
       // Find best audio-only format to report its file size
       const audioFormats = ((info.formats as any[]) || []).filter(
@@ -91,10 +88,7 @@ async function startServer() {
       const ytDlp = await ytDlpReady;
 
       // Get title for filename
-      const info = await ytDlp.getVideoInfo([
-        videoUrl,
-        '--extractor-args', 'youtube:player_client=ios,web',
-      ]);
+      const info = await ytDlp.getVideoInfo([videoUrl]);
       const title = (info.title as string || 'audio').replace(/[\\/:*?"<>|]/g, '');
 
       res.header('Content-Disposition', `attachment; filename="${title}.mp4"`);
@@ -105,7 +99,6 @@ async function startServer() {
         videoUrl,
         '-f', 'bestaudio',
         '--no-playlist',
-        '--extractor-args', 'youtube:player_client=ios,web',
         '-o', '-',
         '--quiet',
       ]);
