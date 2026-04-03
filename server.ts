@@ -1,5 +1,4 @@
 import express from 'express';
-import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
 import ytdl from '@distube/ytdl-core';
@@ -119,8 +118,9 @@ async function startServer() {
     }
   });
 
-  // Vite middleware for development
+  // Vite middleware for development (dynamic import keeps Vite out of production bundle)
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
