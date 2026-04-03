@@ -1,15 +1,12 @@
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 import ytdl from '@distube/ytdl-core';
 import YTDlpWrapModule from 'yt-dlp-wrap';
 const YTDlpWrap = (YTDlpWrapModule as any).default ?? YTDlpWrapModule;
 import cors from 'cors';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // yt-dlp binary — downloaded once on first run, stored next to server
 const YT_DLP_BINARY = path.join(process.cwd(), process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
@@ -17,9 +14,14 @@ const YT_DLP_BINARY = path.join(process.cwd(), process.platform === 'win32' ? 'y
 
 async function ensureYtDlp(): Promise<typeof YTDlpWrap> {
   if (!fs.existsSync(YT_DLP_BINARY)) {
-    console.log('[yt-dlp] Binary not found — downloading from GitHub...');
-    await YTDlpWrap.downloadFromGithub(YT_DLP_BINARY);
-    console.log('[yt-dlp] Binary ready:', YT_DLP_BINARY);
+    console.log('[yt-dlp] Binary not found — attempting download from GitHub...');
+    try {
+      await YTDlpWrap.downloadFromGithub(YT_DLP_BINARY);
+      console.log('[yt-dlp] Binary ready:', YT_DLP_BINARY);
+    } catch (err) {
+      console.error('[yt-dlp] Download failed:', err);
+      throw new Error('yt-dlp binary unavailable. Download it during the build step.');
+    }
   }
   return new YTDlpWrap(YT_DLP_BINARY);
 }

@@ -2,7 +2,11 @@ services:
   - type: web
     name: audio-mp3-backend
     runtime: node
-    buildCommand: npm install
+    buildCommand: >
+      npm install &&
+      curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+      -o yt-dlp &&
+      chmod +x yt-dlp
     startCommand: npm start
     envVars:
       - key: NODE_ENV
